@@ -71,10 +71,10 @@ class Car(Agent):
                 self.direction = (-1, 0)  # Izquierda
                 self.image_path = self.image_paths[1]
             elif dy > 0:
-                self.direction = (0, 1)  # Abajo
+                self.direction = (0, -1)  # Abajo
                 self.image_path = self.image_paths[3]
             elif dy < 0:
-                self.direction = (0, -1)  # Arriba
+                self.direction = (0, 1)  # Arriba
                 self.image_path = self.image_paths[2]
 
 

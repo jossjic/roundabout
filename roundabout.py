@@ -12,16 +12,30 @@ import pygame
 
 
 class Car(Agent):
-    def __init__(self, unique_id, model, pos, matrix, end):
+    def __init__(self, unique_id, model, pos, matrix, end, color, end_positions):
         super().__init__(unique_id, model)
         self.end = end
         self.pos = pos
+        self.end_positions = end_positions
         self.prev_pos = pos
         self.matrix = copy.deepcopy(matrix)
         self.direction = (1, 0)
-        self.image_paths = ["car_right.png",
-                            "car_left.png", "car_up.png", "car_down.png"]
-        self.image_path = "car_right.png"
+        if color == "red":
+            self.image_paths = ["sprites/car_right.png",
+                                "sprites/car_left.png", "sprites/car_up.png", "sprites/car_down.png"]
+            self.image_path = "sprites/car_right.png"
+        elif color == "blue":
+            self.image_paths = ["sprites/car_right_blue.png",
+                                "sprites/car_left_blue.png", "sprites/car_up_blue.png", "sprites/car_down_blue.png"]
+            self.image_path = "sprites/car_right_blue.png"
+        elif color == "green":
+            self.image_paths = ["sprites/car_right_green.png",
+                                "sprites/car_left_green.png", "sprites/car_up_green.png", "sprites/car_down_green.png"]
+            self.image_path = "sprites/car_right_green.png"
+        elif color == "yellow":
+            self.image_paths = ["sprites/car_right_yellow.png",
+                                "sprites/car_left_yellow.png", "sprites/car_up_yellow.png", "sprites/car_down_yellow.png"]
+            self.image_path = "sprites/car_right_yellow.png"
 
         self.roundabout_rules()
 
@@ -107,6 +121,7 @@ class Car(Agent):
                 self.des_roundabout_rules(self.prev_pos)
                 self.prev_pos = new_pos
                 self.roundabout_rules()
+                self.end = random.choice(self.end_positions)
                 self.model.sound.play()
 
 
@@ -132,6 +147,7 @@ class Roundabout(Model):
         super().__init__()
         self.start_positions = [(0, 7), (7, 16), (16, 9), (9, 0)]
         self.end_positions = [(0, 9), (16, 7), (7, 0), (9, 16)]
+        self.colors = ["red", "blue", "green", "yellow"]
 
         self.schedule = RandomActivation(self)
         self.grid = SingleGrid(17, 17, torus=True)
@@ -164,7 +180,7 @@ class Roundabout(Model):
         for i in range(4):
             randomInt = random.randint(0, 3)
             car = Car(self.next_id(), self,
-                      self.start_positions[i], self.matrix, self.end_positions[randomInt])
+                      self.start_positions[i], self.matrix, self.end_positions[randomInt], self.colors[i], self.end_positions)
             self.grid.place_agent(car, car.pos)
             self.schedule.add(car)
 

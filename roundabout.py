@@ -8,6 +8,7 @@ from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 import random
 import copy
+import pygame
 
 
 class Car(Agent):
@@ -15,6 +16,7 @@ class Car(Agent):
         super().__init__(unique_id, model)
         self.end = end
         self.pos = pos
+        self.prev_pos = pos
         self.matrix = copy.deepcopy(matrix)
         self.direction = (1, 0)
         self.image_paths = ["car_right.png",
@@ -28,13 +30,26 @@ class Car(Agent):
         if (x, y) == (0, 7):
             self.matrix[8][4:7] = [0, 0, 0]
         elif (x, y) == (7, 16):
-            for row in range(10, 12):
+            for row in range(10, 13):
                 self.matrix[row][8] = 0
         elif (x, y) == (16, 9):
             self.matrix[8][10:13] = [0, 0, 0]
         elif (x, y) == (9, 0):
             for row in range(4, 7):
                 self.matrix[row][8] = 0
+
+    def des_roundabout_rules(self, pos):
+        x, y = pos
+        if (x, y) == (0, 7):
+            self.matrix[8][4:7] = [1, 1, 1]
+        elif (x, y) == (7, 16):
+            for row in range(10, 13):
+                self.matrix[row][8] = 1
+        elif (x, y) == (16, 9):
+            self.matrix[8][10:13] = [1, 1, 1]
+        elif (x, y) == (9, 0):
+            for row in range(4, 7):
+                self.matrix[row][8] = 1
 
     def step(self):
         grid = Grid(matrix=self.matrix)
@@ -71,11 +86,28 @@ class Car(Agent):
                 self.direction = (-1, 0)  # Izquierda
                 self.image_path = self.image_paths[1]
             elif dy > 0:
-                self.direction = (0, -1)  # Abajo
-                self.image_path = self.image_paths[3]
-            elif dy < 0:
                 self.direction = (0, 1)  # Arriba
                 self.image_path = self.image_paths[2]
+            elif dy < 0:
+                self.direction = (0, -1)  # Abajo
+                self.image_path = self.image_paths[3]
+
+        elif self.pos == self.end:
+            if (self.pos[0]+self.direction[0]) == 17:
+                new_pos = (0, self.pos[1])
+            elif (self.pos[0]+self.direction[0]) == -1:
+                new_pos = (16, self.pos[1])
+            elif (self.pos[1]+self.direction[1]) == 17:
+                new_pos = (self.pos[0], 0)
+            elif (self.pos[1]+self.direction[1]) == -1:
+                new_pos = (self.pos[0], 16)
+
+            if self.model.grid.is_cell_empty(new_pos):
+                self.model.grid.move_agent(self, new_pos)
+                self.des_roundabout_rules(self.prev_pos)
+                self.prev_pos = new_pos
+                self.roundabout_rules()
+                self.model.sound.play()
 
 
 class Block(Agent):
@@ -102,7 +134,7 @@ class Roundabout(Model):
         self.end_positions = [(0, 9), (16, 7), (7, 0), (9, 16)]
 
         self.schedule = RandomActivation(self)
-        self.grid = SingleGrid(17, 17, torus=False)
+        self.grid = SingleGrid(17, 17, torus=True)
         self.matrix = [
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -124,6 +156,10 @@ class Roundabout(Model):
         ]
 
         self.time = 0
+
+        pygame.init()
+        pygame.mixer.init()
+        self.sound = pygame.mixer.Sound("torus.mp3")
 
         for i in range(4):
             randomInt = random.randint(0, 3)
@@ -156,8 +192,6 @@ def agent_portrayal(agent):
             return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Green", "Layer": 0}
         else:
             return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Red", "Layer": 0}
-
-# Define your matrix here
 
 
 grid = CanvasGrid(agent_portrayal, 17, 17, 450, 450)

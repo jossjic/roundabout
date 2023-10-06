@@ -16,6 +16,8 @@ class Car(Agent):
         super().__init__(unique_id, model)
         self.end = end
         self.pos = pos
+        self.type = "Car"
+        self.condition = "none"
         self.end_positions = end_positions
         self.prev_pos = pos
         self.matrix = copy.deepcopy(matrix)
@@ -37,10 +39,10 @@ class Car(Agent):
                                 "sprites/car_left_yellow.png", "sprites/car_up_yellow.png", "sprites/car_down_yellow.png"]
             self.image_path = "sprites/car_right_yellow.png"
 
-        self.roundabout_rules()
+        self.roundabout_rules(pos)
 
-    def roundabout_rules(self):
-        x, y = self.pos
+    def roundabout_rules(self, pos):
+        x, y = pos
         if (x, y) == (0, 7):
             self.matrix[8][4:7] = [0, 0, 0]
         elif (x, y) == (7, 16):
@@ -85,7 +87,7 @@ class Car(Agent):
 
             isEmpty = self.model.grid.is_cell_empty((next_x, next_y))
             if traffic_light_in_vision and self.matrix[next_y][next_x] == 3:
-                if traffic_light_in_vision.canPass and isEmpty:
+                if traffic_light_in_vision.condition and isEmpty:
                     self.model.grid.move_agent(self, (next_x, next_y))
 
             elif isEmpty:
@@ -120,7 +122,7 @@ class Car(Agent):
                 self.model.grid.move_agent(self, new_pos)
                 self.des_roundabout_rules(self.prev_pos)
                 self.prev_pos = new_pos
-                self.roundabout_rules()
+                self.roundabout_rules(self.pos)
                 self.end = random.choice(self.end_positions)
                 self.model.sound.play()
 
@@ -128,18 +130,25 @@ class Car(Agent):
 class Block(Agent):
     def __init__(self, unique_id, model, pos):
         super().__init__(unique_id, model)
+        self.type = "Block"
+        self.condition = "none"
         self.pos = pos
+
+    def step(self):
+        print("Block")
 
 
 class TrafficLight(Agent):
     def __init__(self, unique_id, model, pos):
         super().__init__(unique_id, model)
+        self.type = "TrafficLight"
         self.pos = pos
-        self.canPass = False
+        self.condition = False
+        self.timerRandom = random.randint(0, 4)
 
     def step(self):
-        if self.model.time % 10 == 0:
-            self.canPass = not self.canPass
+        if (self.model.time*self.timerRandom) % 10 == 0:
+            self.condition = not self.condition
 
 
 class Roundabout(Model):
@@ -204,7 +213,7 @@ def agent_portrayal(agent):
     elif isinstance(agent, Block):
         return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Gray", "Layer": 0}
     elif isinstance(agent, TrafficLight):
-        if agent.canPass:
+        if agent.condition:
             return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Green", "Layer": 0}
         else:
             return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Red", "Layer": 0}

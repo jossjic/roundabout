@@ -1,5 +1,5 @@
 from mesa import Agent, Model
-from mesa.space import SingleGrid
+from mesa.space import MultiGrid
 from mesa.time import RandomActivation
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
@@ -159,7 +159,7 @@ class Roundabout(Model):
         self.colors = ["red", "blue", "green", "yellow"]
 
         self.schedule = RandomActivation(self)
-        self.grid = SingleGrid(17, 17, torus=True)
+        self.grid = MultiGrid(17, 17, torus=True)
         self.matrix = [
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -205,6 +205,13 @@ class Roundabout(Model):
     def step(self):
         self.schedule.step()
         self.time += 1
+        if self.time % 10 == 0:
+            for i in range(4):
+                randomInt = random.randint(0, 3)
+                car = Car(self.next_id(), self,
+                          self.start_positions[i], self.matrix, self.end_positions[randomInt], self.colors[i], self.end_positions)
+                self.grid.place_agent(car, car.pos)
+                self.schedule.add(car)
 
 
 def agent_portrayal(agent):

@@ -17,11 +17,14 @@ class Car(Agent):
         self.end = end
         self.pos = pos
         self.type = "Car"
-        self.condition = "none"
+        self.condition = "HIDDEN"
         self.end_positions = end_positions
         self.prev_pos = pos
         self.matrix = copy.deepcopy(matrix)
         self.direction = (1, 0)
+
+        self.hidden_prob = 80
+        self.shown_prob = 2
         if color == "red":
             self.image_paths = ["sprites/car_right.png",
                                 "sprites/car_left.png", "sprites/car_up.png", "sprites/car_down.png"]
@@ -67,64 +70,76 @@ class Car(Agent):
             for row in range(4, 7):
                 self.matrix[row][8] = 1
 
+    def agent_in_front_hidden(self, next_x, next_y):
+        agent_in_front_hidden = False
+        for agent in self.model.grid.get_cell_list_contents((next_x, next_y)):
+            if isinstance(agent, Car) and agent.condition == "HIDDEN":
+                agent_in_front_hidden = True
+        return agent_in_front_hidden
+
     def step(self):
-        grid = Grid(matrix=self.matrix)
-        (x, y) = self.pos
-        start = grid.node(self.pos[0], self.pos[1])
-        end = grid.node(self.end[0], self.end[1])
+        if self.condition == "HIDDEN" and self.shown_prob >= random.random()*100:
+            self.condition = "SHOWN"
+        if self.condition == "SHOWN":
+            grid = Grid(matrix=self.matrix)
+            (x, y) = self.pos
+            start = grid.node(self.pos[0], self.pos[1])
+            end = grid.node(self.end[0], self.end[1])
 
-        finder = AStarFinder(diagonal_movement=DiagonalMovement.never)
-        path, runs = finder.find_path(start, end, grid)
+            finder = AStarFinder(diagonal_movement=DiagonalMovement.never)
+            path, runs = finder.find_path(start, end, grid)
 
-        if len(path) > 1:
-            next_x, next_y = path[1]
+            if len(path) > 1:
+                next_x, next_y = path[1]
 
-            neighbors = self.model.grid.get_neighbors(
-                self.pos, moore=True, include_center=False, radius=3)
+                neighbors = self.model.grid.get_neighbors(
+                    self.pos, moore=True, include_center=False, radius=3)
 
-            traffic_light_in_vision = next(
-                (agent for agent in neighbors if isinstance(agent, TrafficLight)), None)
+                traffic_light_in_vision = next(
+                    (agent for agent in neighbors if isinstance(agent, TrafficLight)), None)
 
-            isEmpty = self.model.grid.is_cell_empty((next_x, next_y))
-            if traffic_light_in_vision and self.matrix[next_y][next_x] == 3:
-                if traffic_light_in_vision.condition and isEmpty:
+                isEmpty = self.model.grid.is_cell_empty((next_x, next_y))
+                if traffic_light_in_vision and self.matrix[next_y][next_x] == 3:
+                    if traffic_light_in_vision.condition and isEmpty:
+                        self.model.grid.move_agent(self, (next_x, next_y))
+
+                elif isEmpty:
                     self.model.grid.move_agent(self, (next_x, next_y))
 
-            elif isEmpty:
-                self.model.grid.move_agent(self, (next_x, next_y))
+                dx = next_x - x
+                dy = next_y - y
+                if dx > 0:
+                    self.direction = (1, 0)  # Derecha
+                    self.image_path = self.image_paths[0]
+                elif dx < 0:
+                    self.direction = (-1, 0)  # Izquierda
+                    self.image_path = self.image_paths[1]
+                elif dy > 0:
+                    self.direction = (0, 1)  # Arriba
+                    self.image_path = self.image_paths[2]
+                elif dy < 0:
+                    self.direction = (0, -1)  # Abajo
+                    self.image_path = self.image_paths[3]
 
-            dx = next_x - x
-            dy = next_y - y
-            if dx > 0:
-                self.direction = (1, 0)  # Derecha
-                self.image_path = self.image_paths[0]
-            elif dx < 0:
-                self.direction = (-1, 0)  # Izquierda
-                self.image_path = self.image_paths[1]
-            elif dy > 0:
-                self.direction = (0, 1)  # Arriba
-                self.image_path = self.image_paths[2]
-            elif dy < 0:
-                self.direction = (0, -1)  # Abajo
-                self.image_path = self.image_paths[3]
+            elif self.pos == self.end:
+                if (self.pos[0]+self.direction[0]) == 17:
+                    new_pos = (0, self.pos[1])
+                elif (self.pos[0]+self.direction[0]) == -1:
+                    new_pos = (16, self.pos[1])
+                elif (self.pos[1]+self.direction[1]) == 17:
+                    new_pos = (self.pos[0], 0)
+                elif (self.pos[1]+self.direction[1]) == -1:
+                    new_pos = (self.pos[0], 16)
 
-        elif self.pos == self.end:
-            if (self.pos[0]+self.direction[0]) == 17:
-                new_pos = (0, self.pos[1])
-            elif (self.pos[0]+self.direction[0]) == -1:
-                new_pos = (16, self.pos[1])
-            elif (self.pos[1]+self.direction[1]) == 17:
-                new_pos = (self.pos[0], 0)
-            elif (self.pos[1]+self.direction[1]) == -1:
-                new_pos = (self.pos[0], 16)
-
-            if self.model.grid.is_cell_empty(new_pos):
-                self.model.grid.move_agent(self, new_pos)
-                self.des_roundabout_rules(self.prev_pos)
-                self.prev_pos = new_pos
-                self.roundabout_rules(self.pos)
-                self.end = random.choice(self.end_positions)
-                self.model.sound.play()
+                if self.model.grid.is_cell_empty(new_pos) or self.agent_in_front_hidden(new_pos[0], new_pos[1]):
+                    self.model.grid.move_agent(self, new_pos)
+                    self.des_roundabout_rules(self.prev_pos)
+                    self.prev_pos = new_pos
+                    self.roundabout_rules(self.pos)
+                    self.end = random.choice(self.end_positions)
+                    if self.hidden_prob >= random.random()*100:
+                        self.condition = "HIDDEN"
+                        self.model.sound.play()
 
 
 class Block(Agent):
@@ -157,7 +172,6 @@ class Roundabout(Model):
         self.start_positions = [(0, 7), (7, 16), (16, 9), (9, 0)]
         self.end_positions = [(0, 9), (16, 7), (7, 0), (9, 16)]
         self.colors = ["red", "blue", "green", "yellow"]
-
         self.schedule = RandomActivation(self)
         self.grid = MultiGrid(17, 17, torus=True)
         self.matrix = [
@@ -186,10 +200,10 @@ class Roundabout(Model):
         pygame.mixer.init()
         self.sound = pygame.mixer.Sound("torus.mp3")
 
-        for i in range(4):
+        for i in range(12):
             randomInt = random.randint(0, 3)
             car = Car(self.next_id(), self,
-                      self.start_positions[i], self.matrix, self.end_positions[randomInt], self.colors[i], self.end_positions)
+                      self.start_positions[i % 4], self.matrix, self.end_positions[randomInt], self.colors[i % 4], self.end_positions)
             self.grid.place_agent(car, car.pos)
             self.schedule.add(car)
 
@@ -205,17 +219,10 @@ class Roundabout(Model):
     def step(self):
         self.schedule.step()
         self.time += 1
-        if self.time % 10 == 0:
-            for i in range(4):
-                randomInt = random.randint(0, 3)
-                car = Car(self.next_id(), self,
-                          self.start_positions[i], self.matrix, self.end_positions[randomInt], self.colors[i], self.end_positions)
-                self.grid.place_agent(car, car.pos)
-                self.schedule.add(car)
 
 
 def agent_portrayal(agent):
-    if isinstance(agent, Car):
+    if isinstance(agent, Car) and agent.condition == "SHOWN":
         return {"Shape": agent.image_path, "Layer": 1}
     elif isinstance(agent, Block):
         return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Gray", "Layer": 0}

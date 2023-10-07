@@ -219,22 +219,3 @@ class Roundabout(Model):
     def step(self):
         self.schedule.step()
         self.time += 1
-
-
-def agent_portrayal(agent):
-    if isinstance(agent, Car) and agent.condition == "SHOWN":
-        return {"Shape": agent.image_path, "Layer": 1}
-    elif isinstance(agent, Block):
-        return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Gray", "Layer": 0}
-    elif isinstance(agent, TrafficLight):
-        if agent.condition:
-            return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Green", "Layer": 0}
-        else:
-            return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Red", "Layer": 0}
-
-
-grid = CanvasGrid(agent_portrayal, 17, 17, 450, 450)
-
-server = ModularServer(Roundabout, [grid], "Roundabout Simulation", {})
-server.port = 8522
-server.launch()

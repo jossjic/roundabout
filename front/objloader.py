@@ -5,6 +5,7 @@ from OpenGL.GL import *
 
 class OBJ:
     generate_on_init = True
+
     @classmethod
     def loadTexture(cls, imagefile):
         surf = pygame.image.load(imagefile)
@@ -14,7 +15,8 @@ class OBJ:
         glBindTexture(GL_TEXTURE_2D, texid)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ix, iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, image)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ix, iy,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, image)
         return texid
 
     @classmethod
@@ -24,9 +26,11 @@ class OBJ:
         dirname = os.path.dirname(filename)
 
         for line in open(filename, "r"):
-            if line.startswith('#'): continue
+            if line.startswith('#'):
+                continue
             values = line.split()
-            if not values: continue
+            if not values:
+                continue
             if values[0] == 'newmtl':
                 mtl = contents[values[1]] = {}
             elif mtl is None:
@@ -51,9 +55,11 @@ class OBJ:
 
         material = None
         for line in open(filename, "r"):
-            if line.startswith('#'): continue
+            if line.startswith('#'):
+                continue
             values = line.split()
-            if not values: continue
+            if not values:
+                continue
             if values[0] == 'v':
                 v = list(map(float, values[1:4]))
                 if swapyz:

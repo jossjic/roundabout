@@ -8,11 +8,10 @@ from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 import random
 import copy
-import pygame
 
 
 class Car(Agent):
-    def __init__(self, unique_id, model, pos, matrix, end, color, end_positions):
+    def __init__(self, unique_id, model, pos, matrix, end, end_positions):
         super().__init__(unique_id, model)
         self.end = end
         self.pos = pos
@@ -24,23 +23,7 @@ class Car(Agent):
         self.direction = (1, 0)
 
         self.hidden_prob = 80
-        self.shown_prob = 2
-        if color == "red":
-            self.image_paths = ["sprites/car_right.png",
-                                "sprites/car_left.png", "sprites/car_up.png", "sprites/car_down.png"]
-            self.image_path = "sprites/car_right.png"
-        elif color == "blue":
-            self.image_paths = ["sprites/car_right_blue.png",
-                                "sprites/car_left_blue.png", "sprites/car_up_blue.png", "sprites/car_down_blue.png"]
-            self.image_path = "sprites/car_right_blue.png"
-        elif color == "green":
-            self.image_paths = ["sprites/car_right_green.png",
-                                "sprites/car_left_green.png", "sprites/car_up_green.png", "sprites/car_down_green.png"]
-            self.image_path = "sprites/car_right_green.png"
-        elif color == "yellow":
-            self.image_paths = ["sprites/car_right_yellow.png",
-                                "sprites/car_left_yellow.png", "sprites/car_up_yellow.png", "sprites/car_down_yellow.png"]
-            self.image_path = "sprites/car_right_yellow.png"
+        self.shown_prob = 20
 
         self.roundabout_rules(pos)
 
@@ -110,16 +93,12 @@ class Car(Agent):
                 dy = next_y - y
                 if dx > 0:
                     self.direction = (1, 0)  # Derecha
-                    self.image_path = self.image_paths[0]
                 elif dx < 0:
                     self.direction = (-1, 0)  # Izquierda
-                    self.image_path = self.image_paths[1]
                 elif dy > 0:
                     self.direction = (0, 1)  # Arriba
-                    self.image_path = self.image_paths[2]
                 elif dy < 0:
                     self.direction = (0, -1)  # Abajo
-                    self.image_path = self.image_paths[3]
 
             elif self.pos == self.end:
                 if (self.pos[0]+self.direction[0]) == 17:
@@ -139,18 +118,12 @@ class Car(Agent):
                     self.end = random.choice(self.end_positions)
                     if self.hidden_prob >= random.random()*100:
                         self.condition = "HIDDEN"
-                        self.model.sound.play()
 
 
 class Block(Agent):
     def __init__(self, unique_id, model, pos):
         super().__init__(unique_id, model)
-        self.type = "Block"
-        self.condition = "none"
         self.pos = pos
-
-    def step(self):
-        print("Block")
 
 
 class TrafficLight(Agent):
@@ -171,7 +144,6 @@ class Roundabout(Model):
         super().__init__()
         self.start_positions = [(0, 7), (7, 16), (16, 9), (9, 0)]
         self.end_positions = [(0, 9), (16, 7), (7, 0), (9, 16)]
-        self.colors = ["red", "blue", "green", "yellow"]
         self.schedule = RandomActivation(self)
         self.grid = MultiGrid(17, 17, torus=True)
         self.matrix = [
@@ -196,14 +168,10 @@ class Roundabout(Model):
 
         self.time = 0
 
-        pygame.init()
-        pygame.mixer.init()
-        self.sound = pygame.mixer.Sound("torus.mp3")
-
         for i in range(12):
             randomInt = random.randint(0, 3)
             car = Car(self.next_id(), self,
-                      self.start_positions[i % 4], self.matrix, self.end_positions[randomInt], self.colors[i % 4], self.end_positions)
+                      self.start_positions[i % 4], self.matrix, self.end_positions[randomInt], self.end_positions)
             self.grid.place_agent(car, car.pos)
             self.schedule.add(car)
 

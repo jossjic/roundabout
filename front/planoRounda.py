@@ -20,6 +20,8 @@ from Edificios import Pampas
 from Assets import Coche
 import pygame
 from pygame.locals import *
+import socket
+import time
 
 # Cargamos las bibliotecas de OpenGL
 from OpenGL.GL import *
@@ -34,7 +36,23 @@ import sys
 sys.path.append('..')
 # from Assets import Edificio
 
-URL_BASE = "http://localhost:5000"
+
+def obtener_direccion_ipv4():
+    try:
+        # Obtener el nombre del host local
+        hostname = socket.gethostname()
+
+        # Obtener la dirección IPv4 asociada con el nombre del host
+        direccion_ipv4 = socket.gethostbyname(hostname)
+
+        return direccion_ipv4
+    except Exception as e:
+        print("Error al obtener la dirección IPv4:", str(e))
+        return None
+
+
+URL_BASE = "http://"+obtener_direccion_ipv4()+":5000"
+
 r = requests.post(URL_BASE + "/games", allow_redirects=False)
 print(r)
 LOCATION = r.headers["Location"]
@@ -110,15 +128,17 @@ pygame.init()
 agents = {}
 
 print(lista)
+count = 0
+positions = [[-90, 25, -55], [-55, 25, 90], [55, 25, -90], [90, 25, 55]]
 for agent in lista:
     if agent["type"] == "Car":
         agenti = Coche(agent["x"], agent["z"])
         agents[agent["id"]] = agenti
     elif agent["type"] == "TrafficLight":
-        print("TrafficlightInit at: ",
-              agent["x"], agent["z"], " is ", agent["condition"])
-        agenti = Semaforo(agent["x"], agent["z"])
-        print(agenti.position[0], agenti.position[2], agenti.condition)
+        agenti = Semaforo(positions[count])
+        count += 1
+        print(agenti.position[0], agenti.position[2],
+              "real position:", agent["x"], agent["z"])
         agents[agent["id"]] = agenti
 
 
@@ -380,6 +400,7 @@ def get_data_from_server():
     while True:
         response = requests.get(URL_BASE + LOCATION)
         lista = response.json()
+        time.sleep(0.4)
 
 
 # Crea un temporizador para realizar la primera solicitud después de 0 segundos
@@ -402,5 +423,6 @@ while not done:
     update_view()
     pygame.display.flip()
     pygame.time.wait(10)
+
 
 pygame.quit()

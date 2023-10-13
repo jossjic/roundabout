@@ -23,7 +23,7 @@ class Car(Agent):
         self.direction = (1, 0)
 
         self.hidden_prob = 80
-        self.shown_prob = 20
+        self.shown_prob = 2
 
         self.roundabout_rules(pos)
 
@@ -129,6 +129,7 @@ class Block(Agent):
 class TrafficLight(Agent):
     def __init__(self, unique_id, model, pos):
         super().__init__(unique_id, model)
+        global testcount
         self.type = "TrafficLight"
         self.pos = pos
         self.condition = False

@@ -2,10 +2,25 @@ import flask
 from flask.json import jsonify
 import uuid
 from roundabout import Roundabout
+import socket
 
 games = {}
 
 app = flask.Flask(__name__)
+
+
+def obtener_direccion_ipv4():
+    try:
+        # Obtener el nombre del host local
+        hostname = socket.gethostname()
+
+        # Obtener la dirección IPv4 asociada con el nombre del host
+        direccion_ipv4 = socket.gethostbyname(hostname)
+
+        return direccion_ipv4
+    except Exception as e:
+        print("Error al obtener la dirección IPv4:", str(e))
+        return None
 
 
 @app.route("/games", methods=["POST"])
@@ -64,4 +79,4 @@ def queryState(id):
         return "No game data available", 404
 
 
-app.run()
+app.run(host=f"{obtener_direccion_ipv4()}")

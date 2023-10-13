@@ -234,8 +234,8 @@ class Calle:
 
 
 class Semaforo:
-    def __init__(self, x, z):
-        self.position = [x, 4, z]
+    def __init__(self, position):
+        self.position = position
         self.largo = 50
         self.ancho = 5
         self.condition = False
@@ -245,7 +245,7 @@ class Semaforo:
 
     def draw(self):
         glPushMatrix()
-        glTranslatef(self.position[0], 4, self.position[2])
+        glTranslatef(self.position[0], self.position[1], self.position[2])
         glRotatef(90, -1, 0, 0)
 
         half_largo = self.largo / 2.0

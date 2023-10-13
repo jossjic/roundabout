@@ -78,6 +78,7 @@ crn2 = "texturas/carne2.jpg"
 ed5 = "texturas/edificio5.jpg"
 calle = "texturas/calle.jpg"
 calle2 = "texturas/calle2.jpg"
+clouds = "texturas/sky_clouds.jpg"
 
 # vc para el obser.
 FOVY = 60.0
@@ -178,7 +179,7 @@ def Init():
     glLoadIdentity()
     gluLookAt(EYE_X, EYE_Y, EYE_Z, CENTER_X,
               CENTER_Y, CENTER_Z, UP_X, UP_Y, UP_Z)
-    glClearColor(0, 0, 0, 0)
+    glClearColor(0.53, 0.81, 0.92, 1.0)
     glEnable(GL_DEPTH_TEST)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
@@ -209,6 +210,7 @@ def Init():
     Texturas(ed5)  # 24
     Texturas(calle)  # 25
     Texturas(calle2)  # 26
+    Texturas(clouds)  # 27
 
     for agent in lista:
         if agent["type"] == "Car":
@@ -240,6 +242,55 @@ def PlanoTexturizado():
     glDisable(GL_TEXTURE_2D)
 
 
+def render_skybox():
+    # Save the current state of the ModelView matrix
+    glPushMatrix()
+    glLoadIdentity()
+
+    # Set the skybox size (a large value to cover the scene)
+    skybox_size = 2000.0
+
+    glEnable(GL_TEXTURE_2D)
+
+    # Bind the single cloud texture to all faces of the skybox
+    glBindTexture(GL_TEXTURE_2D, textures[27])
+
+    glBegin(GL_QUADS)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3d(-skybox_size, -skybox_size, -skybox_size)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3d(skybox_size, -skybox_size, -skybox_size)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3d(skybox_size, skybox_size, -skybox_size)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3d(-skybox_size, skybox_size, -skybox_size)
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    # Restore the previous ModelView matrix
+    glPopMatrix()
+    glPushMatrix()
+
+    # backface
+    glBindTexture(GL_TEXTURE_2D, textures[27])
+    glBegin(GL_QUADS)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3d(-skybox_size, -skybox_size, -skybox_size)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3d(skybox_size, -skybox_size, -skybox_size)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3d(skybox_size, skybox_size, -skybox_size)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3d(-skybox_size, skybox_size, -skybox_size)
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    # Restore the previous ModelView matrix
+    glPopMatrix()
+
+
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     for agent in lista:
@@ -250,6 +301,8 @@ def display():
         if agent["type"] == "TrafficLight":
             agents[agent["id"]].draw()
             agents[agent["id"]].update(agent["condition"])
+
+    render_skybox()
 
     circuloG.draw(100, 100, textures)
     circuloG.drawRectangulo1(textures)

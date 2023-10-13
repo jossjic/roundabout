@@ -294,6 +294,7 @@ class Semaforo:
         glVertex3f(-half_ancho, -half_ancho, half_largo)
 
         glEnd()
+        glColor3f(1.0, 1.0, 1.0)
         glPopMatrix()
 
 

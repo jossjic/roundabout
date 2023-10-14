@@ -70,7 +70,7 @@ def show_configuration_window():
     nsound = pygame.mixer.Sound(nsound_file)
 
     # Inicializa la velocidad con un valor predeterminado
-    running_speed = 1.0
+    running_speed = 4.0
 
     # Configuración de eventos
     speed_change_rate = 0.1
@@ -142,6 +142,8 @@ def show_configuration_window():
         message_text = message_font.render("Press Up or Down Keys to Change Speed", True, (0, 0, 0))
         message_rect = message_text.get_rect(center=(175, 50))
         screen.blit(message_text, message_rect)
+        icon = pygame.image.load("icon.png")
+        pygame.display.set_icon(icon)
 
         pygame.display.update()
 
@@ -539,5 +541,6 @@ while not done:
     pygame.display.flip()
     clock.tick(60)
 
-
+    icon = pygame.image.load("icon.png")
+    pygame.display.set_icon(icon)
 pygame.quit()

@@ -45,7 +45,7 @@ To get started with Roundabout, follow these steps:
    ```
 5. Wait for the loading and enjoy the simulation
 
-Note: You can omit steps 3 to 5 if you run the file >run.py from the main directory.
+Note: You can omit steps 3 and 4 if you run the file "run.py" from the main directory.
 
 ## Usage
 

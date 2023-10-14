@@ -52,11 +52,23 @@ def obtener_direccion_ipv4():
         print("Error al obtener la dirección IPv4:", str(e))
         return None
     
+def play_sound(file):
+    pygame.mixer.Sound(file).play()
+
 def show_configuration_window():
     pygame.init()
-    screen = pygame.display.set_mode((300, 200))
-    pygame.display.set_caption("Configuración de Velocidad")
+    screen = pygame.display.set_mode((350, 200))
+    pygame.display.set_caption("Simulation Speed Configuration")
     
+    pygame.mixer.init()  # Initialize Pygame mixer for audio
+
+    # Load audio files
+    sound_file = "sounds/sound.mp3"
+    nsound_file = "sounds/nsound.mp3"
+
+    sound = pygame.mixer.Sound(sound_file)
+    nsound = pygame.mixer.Sound(nsound_file)
+
     # Inicializa la velocidad con un valor predeterminado
     running_speed = 1.0
 
@@ -67,6 +79,7 @@ def show_configuration_window():
 
     last_key_time = 0
     key_repeat = False
+    nsound_played = False  # Flag to track if nsound has been played
 
     # Loop para la ventana de configuración
     running = True
@@ -89,12 +102,14 @@ def show_configuration_window():
                         running_speed = min(10.0, running_speed)  # Límite superior
                         last_key_time = current_time
                         key_repeat = True
+                        play_sound(sound_file)  # Play sound when key is pressed
                 elif event.key == K_DOWN:
                     if current_time - last_key_time > key_repeat_delay:
                         running_speed -= speed_change_rate
-                        running_speed = max(0.0, running_speed)  # Límite inferior
+                        running_speed = max(0.1, running_speed)  # Límite inferior
                         last_key_time = current_time
                         key_repeat = True
+                        play_sound(sound_file)  # Play sound when key is pressed
             elif event.type == KEYUP:
                 if event.key in (K_UP, K_DOWN):
                     key_repeat = False
@@ -106,15 +121,28 @@ def show_configuration_window():
                     running_speed = min(10.0, running_speed)  # Límite superior
                 elif pygame.key.get_pressed()[K_DOWN]:
                     running_speed -= speed_change_rate
-                    running_speed = max(0.0, running_speed)  # Límite inferior
+                    running_speed = max(0.1, running_speed)  # Límite inferior
                 last_key_time = current_time
 
-        # Dibuja la ventana de configuración con la velocidad actual
+        if not nsound_played and (running_speed == 0.1 or running_speed == 10.0):
+            play_sound(nsound_file)  # Play sound when the limit is reached
+            nsound_played = True  # Set the flag to indicate nsound has been played
+
+        if nsound_played and running_speed != 0.1 and running_speed != 10.0:
+            nsound_played = False  # Reset the flag when the speed is no longer at the limit
+
         screen.fill((255, 255, 255))
         font = pygame.font.Font(None, 36)
-        text = font.render(f"Velocidad: {running_speed:.1f}", True, (0, 0, 0))
-        text_rect = text.get_rect(center=(150, 100))
+        text = font.render(f"Speed: {running_speed:.1f}", True, (0, 0, 0))
+        text_rect = text.get_rect(center=(175, 150))
         screen.blit(text, text_rect)
+
+        # Display the message above the speed display
+        message_font = pygame.font.Font(None, 24)
+        message_text = message_font.render("Press Up or Down Keys to Change Speed", True, (0, 0, 0))
+        message_rect = message_text.get_rect(center=(175, 50))
+        screen.blit(message_text, message_rect)
+
         pygame.display.update()
 
     pygame.quit()
@@ -271,7 +299,7 @@ def Texturas(filepath):
 def Init():
     screen = pygame.display.set_mode(
         (screen_width, screen_height), DOUBLEBUF | OPENGL)
-    pygame.display.set_caption("OpenGL: cubos")
+    pygame.display.set_caption("Roundabout Simulation")
 
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()

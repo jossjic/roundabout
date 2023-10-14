@@ -45,10 +45,11 @@ To get started with Roundabout, follow these steps:
    ```
 5. Wait for the loading and enjoy the simulation
 
-Note: You can omit steps 3 and 4 if you run the file "run.py" from the main directory.
+**Note: You can omit steps 3 and 4 if you run the file "run.py" from the main directory.**
 
 ## Usage
 
+- Choose the simulation speed and press Enter (4 is recommended)
 - Explore the virtual roundabout and observe its dynamics.
 - Interact with the simulation, click + drag to move the camera
 

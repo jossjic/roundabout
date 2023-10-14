@@ -12,52 +12,53 @@ import math
 class Coche:
     def __init__(self, x, z):
         self.Position = [x, 4.0, z]
-        self.speed = 0.1
-        self.position_buffer = []
+        self.TargetPosition = [x, 4.0, z]
         self.direction = [1, 0]
+        self.interpolating = False  # Indica si se está interpolando
+        self.interpolation_progress = 0.0  # Progreso de la interpolación
 
     def cargar(self):
         global obj
         obj = OBJ("objetos3D/Car.obj", swapyz=True)
         obj.generate()
 
-    def update(self, new_x, new_z, direction):
+    def set_target_position(self, new_x, new_z, direction):
         self.direction = direction
-        self.Position = [new_x, self.Position[1], new_z]
-        # if self.Position != [new_x, self.Position[1], new_z]:
-        #     self.position_buffer.append([new_x, self.Position[1], new_z, direction])
+        self.TargetPosition = [new_x, self.Position[1], new_z]
+        self.interpolation_progress = 0.0
+        self.interpolating = True
 
-    # def move(self):
-    #     if self.position_buffer:
-    #         new_x, new_y, new_z, direction = self.position_buffer[0]
+    def update(self, dt):
+        if self.interpolating:
+            # Si estamos interpolando, actualizamos la posición
+            self.interpolation_progress +=  dt
 
-    #         delta_x = new_x - self.Position[0]
-    #         delta_z = new_z - self.Position[2]
-    #         distance = math.sqrt(delta_x**2 + delta_z**2)
+            # Calculamos la posición interpolada
+            if self.interpolation_progress >= 1.0:
+                self.interpolation_progress = 1.0
+                self.interpolating = False
 
-    #         if distance > self.speed:
-    #             step = [delta_x * self.speed / distance, 0, delta_z * self.speed / distance]
-    #             self.Position = [x + y for x, y in zip(self.Position, step)]
-    #         else:
-    #             self.Position = [new_x, new_y, new_z]
-    #             self.position_buffer.pop(0)
+            # Interpolación lineal entre la posición actual y la de destino
+            self.Position[0] = self.Position[0] + \
+                (self.TargetPosition[0] - self.Position[0]) * self.interpolation_progress
+            self.Position[2] = self.Position[2] + \
+                (self.TargetPosition[2] - self.Position[2]) * self.interpolation_progress
 
     def draw(self):
         global obj
-        # self.move()
         glPushMatrix()
         glTranslatef(self.Position[0], 4, self.Position[2])
-        glScaled(5, 5, 5)
+        glScaled(3.5, 3.5, 3.5)
         if self.direction == [1, 0]:
             glRotatef(90, 0, -1, 0)
         elif self.direction == [-1, 0]:
             glRotatef(90, 0, 1, 0)
         elif self.direction == [0, 1]:
             glRotatef(180, 0, 1, 0)
-
         glRotatef(90, -1, 0, 0)
         obj.render()
         glPopMatrix()
+
 
 
 class Banquetas:

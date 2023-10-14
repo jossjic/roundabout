@@ -23,6 +23,7 @@ from pygame.locals import *
 import socket
 import time
 
+
 # Cargamos las bibliotecas de OpenGL
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -33,6 +34,7 @@ from objloader import *
 
 # Se carga el archivo de la clase Cubo
 import sys
+
 sys.path.append('..')
 # from Assets import Edificio
 
@@ -49,6 +51,77 @@ def obtener_direccion_ipv4():
     except Exception as e:
         print("Error al obtener la dirección IPv4:", str(e))
         return None
+    
+def show_configuration_window():
+    pygame.init()
+    screen = pygame.display.set_mode((300, 200))
+    pygame.display.set_caption("Configuración de Velocidad")
+    
+    # Inicializa la velocidad con un valor predeterminado
+    running_speed = 1.0
+
+    # Configuración de eventos
+    speed_change_rate = 0.1
+    key_repeat_delay = 200  # Milisegundos
+    key_repeat_interval = 50  # Milisegundos
+
+    last_key_time = 0
+    key_repeat = False
+
+    # Loop para la ventana de configuración
+    running = True
+
+    while running:
+        current_time = pygame.time.get_ticks()
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                exit()
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    exit()
+                elif event.key == K_RETURN:
+                    running = False
+                elif event.key == K_UP:
+                    if current_time - last_key_time > key_repeat_delay:
+                        running_speed += speed_change_rate
+                        running_speed = min(10.0, running_speed)  # Límite superior
+                        last_key_time = current_time
+                        key_repeat = True
+                elif event.key == K_DOWN:
+                    if current_time - last_key_time > key_repeat_delay:
+                        running_speed -= speed_change_rate
+                        running_speed = max(0.0, running_speed)  # Límite inferior
+                        last_key_time = current_time
+                        key_repeat = True
+            elif event.type == KEYUP:
+                if event.key in (K_UP, K_DOWN):
+                    key_repeat = False
+
+        if key_repeat:
+            if current_time - last_key_time > key_repeat_interval:
+                if pygame.key.get_pressed()[K_UP]:
+                    running_speed += speed_change_rate
+                    running_speed = min(10.0, running_speed)  # Límite superior
+                elif pygame.key.get_pressed()[K_DOWN]:
+                    running_speed -= speed_change_rate
+                    running_speed = max(0.0, running_speed)  # Límite inferior
+                last_key_time = current_time
+
+        # Dibuja la ventana de configuración con la velocidad actual
+        screen.fill((255, 255, 255))
+        font = pygame.font.Font(None, 36)
+        text = font.render(f"Velocidad: {running_speed:.1f}", True, (0, 0, 0))
+        text_rect = text.get_rect(center=(150, 100))
+        screen.blit(text, text_rect)
+        pygame.display.update()
+
+    pygame.quit()
+    return running_speed
+
+
+
 
 
 URL_BASE = "http://"+obtener_direccion_ipv4()+":5000"
@@ -66,6 +139,7 @@ mouse_down = False
 
 screen_width = 500
 screen_height = 500
+
 
 # texturas
 textures = []
@@ -123,7 +197,14 @@ Z_MAX = 500
 # Dimension del plano
 DimBoard = 200
 
+running_speed = show_configuration_window()
+
 pygame.init()
+
+clock = pygame.time.Clock()
+previous_time = pygame.time.get_ticks()
+dt = 0
+
 
 agents = {}
 
@@ -132,7 +213,7 @@ count = 0
 positions = [[-90, 25, -55], [-55, 25, 90], [55, 25, -90], [90, 25, 55]]
 for agent in lista:
     if agent["type"] == "Car":
-        agenti = Coche(agent["x"], agent["z"])
+        agenti = Coche(agent["x"]* 20 - 160, agent["z"]* 20 - 160)
         agents[agent["id"]] = agenti
     elif agent["type"] == "TrafficLight":
         agenti = Semaforo(positions[count])
@@ -140,6 +221,7 @@ for agent in lista:
         print(agenti.position[0], agenti.position[2],
               "real position:", agent["x"], agent["z"])
         agents[agent["id"]] = agenti
+
 
 
 circuloG = Calle(DimBoard)
@@ -312,22 +394,24 @@ def render_skybox():
 
 
 def display():
+    global dt, running_speed
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     for agent in lista:
         if agent["type"] == "Car" and agent["condition"] == "SHOWN":
             agents[agent["id"]].draw()
-            agents[agent["id"]].update(
+            agents[agent["id"]].set_target_position(
                 agent["x"] * 20 - 160, agent["z"] * 20 - 160, agent["direction"])
+            agents[agent["id"]].update(dt*running_speed) 
         if agent["type"] == "TrafficLight":
             agents[agent["id"]].draw()
             agents[agent["id"]].update(agent["condition"])
 
     render_skybox()
-
+    
     circuloG.draw(100, 100, textures)
     circuloG.drawRectangulo1(textures)
     circuloG.drawRectangulo2(textures)
-    circuloP.draw2(50, 100)
+    circuloP.draw2(35, 100)
     banqueta1.draw(-50, 3, 143)
     banqueta1.draw(50, 3, -143)
     banqueta1.draw(-50, 3, -143)
@@ -396,11 +480,11 @@ def update_view():
 
 
 def get_data_from_server():
-    global lista
+    global lista, running_speed
     while True:
         response = requests.get(URL_BASE + LOCATION)
         lista = response.json()
-        time.sleep(0.4)
+        time.sleep(1/running_speed)
 
 
 # Crea un temporizador para realizar la primera solicitud después de 0 segundos
@@ -412,6 +496,9 @@ data_timer.start()
 done = False
 Init()
 while not done:
+    current_time = pygame.time.get_ticks()
+    dt = (current_time - previous_time) / 1000.0
+    previous_time = current_time
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
@@ -422,7 +509,7 @@ while not done:
     display()
     update_view()
     pygame.display.flip()
-    pygame.time.wait(10)
+    clock.tick(60)
 
 
 pygame.quit()

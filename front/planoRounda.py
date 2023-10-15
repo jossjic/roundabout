@@ -171,8 +171,8 @@ mouse_x, mouse_y = 0, 0
 rotate_x, rotate_y = 0, 0
 mouse_down = False
 
-screen_width = 500
-screen_height = 500
+screen_width = 1920
+screen_height = 1080
 
 
 # texturas
@@ -385,7 +385,7 @@ def render_skybox():
     glLoadIdentity()
 
     # Set the skybox size (a large value to cover the scene)
-    skybox_size = 2000.0
+    skybox_size = 4000.0
 
     glEnable(GL_TEXTURE_2D)
 
@@ -407,77 +407,10 @@ def render_skybox():
 
     # Restore the previous ModelView matrix
     glPopMatrix()
-    glPushMatrix()
-
-    # backface
-    glBindTexture(GL_TEXTURE_2D, textures[27])
-    glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3d(-skybox_size, -skybox_size, -skybox_size)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3d(skybox_size, -skybox_size, -skybox_size)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3d(skybox_size, skybox_size, -skybox_size)
-    glTexCoord2f(0.0, 1.0)
-    glVertex3d(-skybox_size, skybox_size, -skybox_size)
-    glEnd()
-
-    # left face
-    glBindTexture(GL_TEXTURE_2D, textures[27])
-    glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3d(-skybox_size, -skybox_size, -skybox_size)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3d(-skybox_size, -skybox_size, skybox_size)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3d(-skybox_size, skybox_size, skybox_size)
-    glTexCoord2f(0.0, 1.0)
-    glVertex3d(-skybox_size, skybox_size, -skybox_size)
-    glEnd()
-
-    # right face
-    glBindTexture(GL_TEXTURE_2D, textures[27])
-    glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3d(skybox_size, -skybox_size, -skybox_size)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3d(skybox_size, -skybox_size, skybox_size)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3d(skybox_size, skybox_size, skybox_size)
-    glTexCoord2f(0.0, 1.0)
-    glVertex3d(skybox_size, skybox_size, -skybox_size)
-    glEnd()
-
-    # top face
-    glBindTexture(GL_TEXTURE_2D, textures[27])
-    glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3d(-skybox_size, skybox_size, -skybox_size)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3d(-skybox_size, skybox_size, skybox_size)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3d(skybox_size, skybox_size, skybox_size)
-    glTexCoord2f(0.0, 1.0)
-    glVertex3d(skybox_size, skybox_size, -skybox_size)
-    glEnd()
-
-    # bottom face
-    glBindTexture(GL_TEXTURE_2D, textures[27])
-    glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3d(-skybox_size, -skybox_size, -skybox_size)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3d(-skybox_size, -skybox_size, skybox_size)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3d(skybox_size, -skybox_size, skybox_size)
-    glTexCoord2f(0.0, 1.0)
-    glVertex3d(skybox_size, -skybox_size, -skybox_size)
-    glEnd()
 
     glDisable(GL_TEXTURE_2D)
 
     # Restore the previous ModelView matrix
-    glPopMatrix()
 
 
 def display():

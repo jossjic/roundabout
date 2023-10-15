@@ -408,8 +408,6 @@ def render_skybox():
     # Restore the previous ModelView matrix
     glPopMatrix()
 
-    glDisable(GL_TEXTURE_2D)
-
     # Restore the previous ModelView matrix
 
 

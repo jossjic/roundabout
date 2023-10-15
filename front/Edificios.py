@@ -120,7 +120,7 @@ class Pampas:
         glTexCoord2f(0.0, 1.0)
         glVertex3f(50, 70, 50)
         glTexCoord2f(0.0, 0.0)
-        glVertex3f(-25, 70, -50)
+        glVertex3f(-25, 70, 50)
         glTexCoord2f(0.0, 1.0)
         glVertex3f(-25, 70, -50)
         glEnd()

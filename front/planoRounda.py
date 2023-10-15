@@ -51,15 +51,17 @@ def obtener_direccion_ipv4():
     except Exception as e:
         print("Error al obtener la dirección IPv4:", str(e))
         return None
-    
+
+
 def play_sound(file):
     pygame.mixer.Sound(file).play()
+
 
 def show_configuration_window():
     pygame.init()
     screen = pygame.display.set_mode((350, 200))
     pygame.display.set_caption("Simulation Speed Configuration")
-    
+
     pygame.mixer.init()  # Initialize Pygame mixer for audio
 
     # Load audio files
@@ -99,17 +101,21 @@ def show_configuration_window():
                 elif event.key == K_UP:
                     if current_time - last_key_time > key_repeat_delay:
                         running_speed += speed_change_rate
-                        running_speed = min(10.0, running_speed)  # Límite superior
+                        # Límite superior
+                        running_speed = min(10.0, running_speed)
                         last_key_time = current_time
                         key_repeat = True
-                        play_sound(sound_file)  # Play sound when key is pressed
+                        # Play sound when key is pressed
+                        play_sound(sound_file)
                 elif event.key == K_DOWN:
                     if current_time - last_key_time > key_repeat_delay:
                         running_speed -= speed_change_rate
-                        running_speed = max(0.1, running_speed)  # Límite inferior
+                        # Límite inferior
+                        running_speed = max(0.1, running_speed)
                         last_key_time = current_time
                         key_repeat = True
-                        play_sound(sound_file)  # Play sound when key is pressed
+                        # Play sound when key is pressed
+                        play_sound(sound_file)
             elif event.type == KEYUP:
                 if event.key in (K_UP, K_DOWN):
                     key_repeat = False
@@ -139,7 +145,8 @@ def show_configuration_window():
 
         # Display the message above the speed display
         message_font = pygame.font.Font(None, 24)
-        message_text = message_font.render("Press Up or Down Keys to Change Speed", True, (0, 0, 0))
+        message_text = message_font.render(
+            "Press Up or Down Keys to Change Speed", True, (0, 0, 0))
         message_rect = message_text.get_rect(center=(175, 50))
         screen.blit(message_text, message_rect)
         icon = pygame.image.load("icon.png")
@@ -149,9 +156,6 @@ def show_configuration_window():
 
     pygame.quit()
     return running_speed
-
-
-
 
 
 URL_BASE = "http://"+obtener_direccion_ipv4()+":5000"
@@ -230,6 +234,8 @@ DimBoard = 200
 running_speed = show_configuration_window()
 
 pygame.init()
+zoom_factor = 1.0  # Initial zoom factor
+zoom_increment = 0.1  # Amount by which zoom changes
 
 clock = pygame.time.Clock()
 previous_time = pygame.time.get_ticks()
@@ -243,7 +249,7 @@ count = 0
 positions = [[-90, 25, -55], [-55, 25, 90], [55, 25, -90], [90, 25, 55]]
 for agent in lista:
     if agent["type"] == "Car":
-        agenti = Coche(agent["x"]* 20 - 160, agent["z"]* 20 - 160)
+        agenti = Coche(agent["x"] * 20 - 160, agent["z"] * 20 - 160)
         agents[agent["id"]] = agenti
     elif agent["type"] == "TrafficLight":
         agenti = Semaforo(positions[count])
@@ -251,7 +257,6 @@ for agent in lista:
         print(agenti.position[0], agenti.position[2],
               "real position:", agent["x"], agent["z"])
         agents[agent["id"]] = agenti
-
 
 
 circuloG = Calle(DimBoard)
@@ -417,6 +422,58 @@ def render_skybox():
     glVertex3d(-skybox_size, skybox_size, -skybox_size)
     glEnd()
 
+    # left face
+    glBindTexture(GL_TEXTURE_2D, textures[27])
+    glBegin(GL_QUADS)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3d(-skybox_size, -skybox_size, -skybox_size)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3d(-skybox_size, -skybox_size, skybox_size)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3d(-skybox_size, skybox_size, skybox_size)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3d(-skybox_size, skybox_size, -skybox_size)
+    glEnd()
+
+    # right face
+    glBindTexture(GL_TEXTURE_2D, textures[27])
+    glBegin(GL_QUADS)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3d(skybox_size, -skybox_size, -skybox_size)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3d(skybox_size, -skybox_size, skybox_size)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3d(skybox_size, skybox_size, skybox_size)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3d(skybox_size, skybox_size, -skybox_size)
+    glEnd()
+
+    # top face
+    glBindTexture(GL_TEXTURE_2D, textures[27])
+    glBegin(GL_QUADS)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3d(-skybox_size, skybox_size, -skybox_size)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3d(-skybox_size, skybox_size, skybox_size)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3d(skybox_size, skybox_size, skybox_size)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3d(skybox_size, skybox_size, -skybox_size)
+    glEnd()
+
+    # bottom face
+    glBindTexture(GL_TEXTURE_2D, textures[27])
+    glBegin(GL_QUADS)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3d(-skybox_size, -skybox_size, -skybox_size)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3d(-skybox_size, -skybox_size, skybox_size)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3d(skybox_size, -skybox_size, skybox_size)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3d(skybox_size, -skybox_size, -skybox_size)
+    glEnd()
+
     glDisable(GL_TEXTURE_2D)
 
     # Restore the previous ModelView matrix
@@ -427,22 +484,22 @@ def display():
     global dt, running_speed
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     for agent in lista:
-        agenti = agents[agent["id"]] 
-        if isinstance(agenti, Coche):  
+        agenti = agents[agent["id"]]
+        if isinstance(agenti, Coche):
             if agent["condition"] == "SHOWN":
                 agenti.set_target_position(
-                agent["x"] * 20 - 160, agent["z"] * 20 - 160, agent["direction"])
-                agenti.update(dt*running_speed) 
+                    agent["x"] * 20 - 160, agent["z"] * 20 - 160, agent["direction"])
+                agenti.update(dt*running_speed)
                 agenti.draw()
-            elif agent["x"]* 20 - 160!=agenti.Position[0] or agent["z"]* 20 - 160!=agenti.Position[2]:
+            elif agent["x"] * 20 - 160 != agenti.Position[0] or agent["z"] * 20 - 160 != agenti.Position[2]:
                 agenti.set_target_position(
-                agent["x"] * 20 - 160, agent["z"] * 20 - 160, agent["direction"])
+                    agent["x"] * 20 - 160, agent["z"] * 20 - 160, agent["direction"])
         if isinstance(agenti, Semaforo):
             agenti.draw()
             agenti.update(agent["condition"])
 
     render_skybox()
-    
+
     circuloG.draw(100, 100, textures)
     circuloG.drawRectangulo1(textures)
     circuloG.drawRectangulo2(textures)
@@ -486,7 +543,7 @@ def display():
 
 
 def handle_mouse_input(event):
-    global rotate_x, rotate_y, mouse_x, mouse_y, mouse_down
+    global rotate_x, rotate_y, mouse_x, mouse_y, mouse_down, zoom_factor, zoom_increment
 
     if event.type == pygame.MOUSEMOTION:
         if mouse_down:
@@ -502,11 +559,18 @@ def handle_mouse_input(event):
         if event.button == 1:  # Botón izquierdo del mouse
             mouse_down = False
 
+    elif event.type == pygame.MOUSEWHEEL:
+        if event.y > 0:  # Scrolling up (zoom in)
+            zoom_factor += zoom_increment
+        elif event.y < 0:  # Scrolling down (zoom out)
+            zoom_factor -= zoom_increment
+            zoom_factor = max(0.1, zoom_factor)
+
 
 def update_view():
     glLoadIdentity()
     gluLookAt(
-        EYE_X, EYE_Y, EYE_Z,
+        EYE_X * zoom_factor, EYE_Y * zoom_factor, EYE_Z * zoom_factor,
         CENTER_X, CENTER_Y, CENTER_Z,
         UP_X, UP_Y, UP_Z
     )
@@ -539,6 +603,14 @@ while not done:
             done = True
         elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
             handle_mouse_input(event)
+        elif event.type == pygame.MOUSEWHEEL:
+            handle_mouse_input(event)
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_z:  # Zoom in (press 'z')
+                zoom_factor += zoom_increment
+            elif event.key == pygame.K_x:  # Zoom out (press 'x')
+                zoom_factor -= zoom_increment
+                zoom_factor = max(0.1, zoom_factor)  # Limit minimum zoom
 
     # Actualiza la vista con los datos actualizados del servidor
     display()

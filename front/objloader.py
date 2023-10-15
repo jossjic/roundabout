@@ -1,6 +1,7 @@
 import os
 import pygame
 from OpenGL.GL import *
+import random
 
 
 class OBJ:
@@ -24,6 +25,7 @@ class OBJ:
         contents = {}
         mtl = None
         dirname = os.path.dirname(filename)
+        change_color = False  # Variable para rastrear si estamos cambiando el color de "Body"
 
         for line in open(filename, "r"):
             if line.startswith('#'):
@@ -33,24 +35,36 @@ class OBJ:
                 continue
             if values[0] == 'newmtl':
                 mtl = contents[values[1]] = {}
+                # Si el nuevo material es "Body," establece change_color en True
+                if values[1] == 'Body' and filenameaux == "objetos3D/Car.obj":
+                    change_color = True
+                else:
+                    change_color = False
             elif mtl is None:
                 raise ValueError("mtl file doesn't start with newmtl stmt")
             elif values[0] == 'map_Kd':
-                # load the texture referred to by this declaration
                 mtl[values[0]] = values[1]
                 imagefile = os.path.join(dirname, mtl['map_Kd'])
                 mtl['texture_Kd'] = cls.loadTexture(imagefile)
+            elif change_color and values[0] == 'Kd':
+                # Assign a unique color to the "Body" material
+                mtl[values[0]] = list(map(float, body_color))
             else:
                 mtl[values[0]] = list(map(float, values[1:]))
+
+
         return contents
 
     def __init__(self, filename, swapyz=False):
+        global filenameaux, body_color
         """Loads a Wavefront OBJ file. """
         self.vertices = []
         self.normals = []
         self.texcoords = []
         self.faces = []
         self.gl_list = 0
+        filenameaux = filename
+        body_color = [random.random(), random.random(), random.random()]
         dirname = os.path.dirname(filename)
 
         material = None
@@ -117,6 +131,11 @@ class OBJ:
                     glNormal3fv(self.normals[normals[i] - 1])
                 if texture_coords[i] > 0:
                     glTexCoord2fv(self.texcoords[texture_coords[i] - 1])
+                # Use the stored color for "Body"
+                if material == 'Body':
+                    glColor(body_color)
+                else:
+                    glColor(*mtl['Kd'])
                 glVertex3fv(self.vertices[vertices[i] - 1])
             glEnd()
         glDisable(GL_TEXTURE_2D)

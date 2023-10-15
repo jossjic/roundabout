@@ -17,11 +17,12 @@ class Coche:
         self.interpolating = False  # Indica si se está interpolando
         self.interpolation_progress = 0.0  # Progreso de la interpolación
         self.start_positions = [(-160, -20), (-20, 160), (160, 20), (20, -160)]
+        self.obj = None
 
     def cargar(self):
-        global obj
-        obj = OBJ("objetos3D/Car.obj", swapyz=True)
-        obj.generate()
+        self.obj = OBJ("objetos3D/Car.obj", swapyz=True)
+        self.obj.generate()
+        self.obj.body_color = [random.random(), random.random(), random.random()]
 
     def set_target_position(self, new_x, new_z, direction):
         self.direction = direction
@@ -51,7 +52,6 @@ class Coche:
                 (self.TargetPosition[2] - self.Position[2]) * self.interpolation_progress
 
     def draw(self):
-        global obj
         glPushMatrix()
         glTranslatef(self.Position[0], 4, self.Position[2])
         glScaled(3.5, 3.5, 3.5)
@@ -62,7 +62,7 @@ class Coche:
         elif self.direction == [0, 1]:
             glRotatef(180, 0, 1, 0)
         glRotatef(90, -1, 0, 0)
-        obj.render()
+        self.obj.render()
         glPopMatrix()
 
 

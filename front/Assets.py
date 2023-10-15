@@ -16,6 +16,7 @@ class Coche:
         self.direction = [1, 0]
         self.interpolating = False  # Indica si se está interpolando
         self.interpolation_progress = 0.0  # Progreso de la interpolación
+        self.start_positions = [(-160, -20), (-20, 160), (160, 20), (20, -160)]
 
     def cargar(self):
         global obj
@@ -27,6 +28,11 @@ class Coche:
         self.TargetPosition = [new_x, self.Position[1], new_z]
         self.interpolation_progress = 0.0
         self.interpolating = True
+        for start in self.start_positions:
+            if (new_x, new_z) == start:
+                self.Position[0] = self.TargetPosition[0]
+                self.Position[2] = self.TargetPosition[2]
+                break
 
     def update(self, dt):
         if self.interpolating:

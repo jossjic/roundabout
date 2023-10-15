@@ -427,14 +427,19 @@ def display():
     global dt, running_speed
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     for agent in lista:
-        if agent["type"] == "Car" and agent["condition"] == "SHOWN":
-            agents[agent["id"]].draw()
-            agents[agent["id"]].set_target_position(
+        agenti = agents[agent["id"]] 
+        if isinstance(agenti, Coche):  
+            if agent["condition"] == "SHOWN":
+                agenti.set_target_position(
                 agent["x"] * 20 - 160, agent["z"] * 20 - 160, agent["direction"])
-            agents[agent["id"]].update(dt*running_speed) 
-        if agent["type"] == "TrafficLight":
-            agents[agent["id"]].draw()
-            agents[agent["id"]].update(agent["condition"])
+                agenti.update(dt*running_speed) 
+                agenti.draw()
+            elif agent["x"]* 20 - 160!=agenti.Position[0] or agent["z"]* 20 - 160!=agenti.Position[2]:
+                agenti.set_target_position(
+                agent["x"] * 20 - 160, agent["z"] * 20 - 160, agent["direction"])
+        if isinstance(agenti, Semaforo):
+            agenti.draw()
+            agenti.update(agent["condition"])
 
     render_skybox()
     

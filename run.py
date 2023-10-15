@@ -17,7 +17,7 @@ front_script = os.path.join(front_dir, "planoRounda.py")
 os.chdir(backend_dir)
 backend_process = subprocess.Popen(["python", "backend.py"])
 
-time.sleep(5)
+time.sleep(3)
 
 # Cambiar al directorio de front y ejecutar planoRounda.py
 os.chdir(front_dir)

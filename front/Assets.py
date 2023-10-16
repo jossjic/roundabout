@@ -11,34 +11,37 @@ import math
 
 class Coche:
     def __init__(self, x, z):
-        self.Position = [x, 4.0, z]
-        self.TargetPosition = [x, 4.0, z]
-        self.direction = [1, 0]
+        self.Position = [x, 4.0, z]  # Posición inicial
+        self.TargetPosition = [x, 4.0, z]  # Posición de destino
+        self.direction = [1, 0]  # Dirección inicial
         self.interpolating = False  # Indica si se está interpolando
         self.interpolation_progress = 0.0  # Progreso de la interpolación
+        # Posiciones iniciales
         self.start_positions = [(-160, -20), (-20, 160), (160, 20), (20, -160)]
-        self.obj = None
+        self.obj = None  # Objeto 3D
 
-    def cargar(self):
+    def cargar(self):  # Cargamos el objeto 3D
         self.obj = OBJ("objetos3D/Car.obj", swapyz=True)
         self.obj.generate()
-        self.obj.body_color = [random.random(), random.random(), random.random()]
+        self.obj.body_color = [
+            random.random(), random.random(), random.random()]
 
+    # Establecemos la posición de destino y si se va a interpolar
     def set_target_position(self, new_x, new_z, direction):
         self.direction = direction
         self.TargetPosition = [new_x, self.Position[1], new_z]
         self.interpolation_progress = 0.0
         self.interpolating = True
-        for start in self.start_positions:
+        for start in self.start_positions:  # Si llegamos a la posición inicial, dejamos de interpolar
             if (new_x, new_z) == start:
                 self.Position[0] = self.TargetPosition[0]
                 self.Position[2] = self.TargetPosition[2]
                 break
 
-    def update(self, dt):
+    def update(self, dt):  # Actualizamos la posición usando interpolación lineal
         if self.interpolating:
             # Si estamos interpolando, actualizamos la posición
-            self.interpolation_progress +=  dt
+            self.interpolation_progress += dt
 
             # Calculamos la posición interpolada
             if self.interpolation_progress >= 1.0:
@@ -47,24 +50,26 @@ class Coche:
 
             # Interpolación lineal entre la posición actual y la de destino
             self.Position[0] = self.Position[0] + \
-                (self.TargetPosition[0] - self.Position[0]) * self.interpolation_progress
+                (self.TargetPosition[0] - self.Position[0]
+                 ) * self.interpolation_progress
             self.Position[2] = self.Position[2] + \
-                (self.TargetPosition[2] - self.Position[2]) * self.interpolation_progress
+                (self.TargetPosition[2] - self.Position[2]
+                 ) * self.interpolation_progress
 
-    def draw(self):
+    def draw(self):  # Dibujamos el coche
         glPushMatrix()
+        # Trasladamos el coche a su posición
         glTranslatef(self.Position[0], 4, self.Position[2])
-        glScaled(3.5, 3.5, 3.5)
-        if self.direction == [1, 0]:
+        glScaled(3.5, 3.5, 3.5)  # Escalamos el coche
+        if self.direction == [1, 0]:  # Rotamos el coche según la dirección
             glRotatef(90, 0, -1, 0)
         elif self.direction == [-1, 0]:
             glRotatef(90, 0, 1, 0)
         elif self.direction == [0, 1]:
             glRotatef(180, 0, 1, 0)
         glRotatef(90, -1, 0, 0)
-        self.obj.render()
+        self.obj.render()  # Dibujamos el coche
         glPopMatrix()
-
 
 
 class Banquetas:

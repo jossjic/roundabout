@@ -13,21 +13,25 @@ import copy
 class Car(Agent):
     def __init__(self, unique_id, model, pos, matrix, end, end_positions):
         super().__init__(unique_id, model)
-        self.end = end
-        self.pos = pos
-        self.type = "Car"
-        self.condition = "HIDDEN"
+        self.end = end  # Indica la posición destino del coche
+        self.pos = pos  # Indica la posición actual del coche
+        self.type = "Car"  # Indica el tipo de agente para identificarse en el front-end
+        self.condition = "HIDDEN"  # Indica si el coche está escondido o no, para no crear y destruir instancias siempre vamos a tener el mismo número de coches tanto en el back como en el front
+        # Indica las posiciones destino posibles del coche
         self.end_positions = end_positions
-        self.prev_pos = pos
+        self.prev_pos = pos  # Indica la posición anterior del coche
+        # Define la matriz local del coche, está matriz se usará para definir su comportamiento
         self.matrix = copy.deepcopy(matrix)
-        self.direction = (1, 0)
+        self.direction = (1, 0)  # Indica la dirección del coche
 
+        # Indica el porcentaje de probabilidad para que el coche desaparezca al llegar a su destino
         self.hidden_prob = 80
-        self.shown_prob = 2
+        self.shown_prob = 2  # Si el coche está oculto indica el porcentaje de probabilidad para que el coche vuelva a dibujarse en el paso actual de simulación y siguientes
 
+        # Aplica las reglas dedel coche en la posición inicial
         self.roundabout_rules(pos)
 
-    def roundabout_rules(self, pos):
+    def roundabout_rules(self, pos):  # Aplica las reglas del coche en la posición actual
         x, y = pos
         if (x, y) == (0, 7):
             self.matrix[8][4:7] = [0, 0, 0]
@@ -40,6 +44,7 @@ class Car(Agent):
             for row in range(4, 7):
                 self.matrix[row][8] = 0
 
+    # Elimina las reglas del coche en la posición anterior
     def des_roundabout_rules(self, pos):
         x, y = pos
         if (x, y) == (0, 7):
@@ -53,6 +58,7 @@ class Car(Agent):
             for row in range(4, 7):
                 self.matrix[row][8] = 1
 
+    # Comprueba si hay un coche oculto en la posición siguiente
     def agent_in_front_hidden(self, next_x, next_y):
         agent_in_front_hidden = False
         for agent in self.model.grid.get_cell_list_contents((next_x, next_y)):
@@ -60,7 +66,7 @@ class Car(Agent):
                 agent_in_front_hidden = True
         return agent_in_front_hidden
 
-    def step(self):
+    def step(self):  # Método que se ejecuta en cada paso de simulación
         if self.condition == "HIDDEN" and self.shown_prob >= random.random()*100:
             self.condition = "SHOWN"
         if self.condition == "SHOWN":
@@ -120,32 +126,31 @@ class Car(Agent):
                         self.condition = "HIDDEN"
 
 
-class Block(Agent):
-    def __init__(self, unique_id, model, pos):
-        super().__init__(unique_id, model)
-        self.pos = pos
-
-
 class TrafficLight(Agent):
     def __init__(self, unique_id, model, pos):
         super().__init__(unique_id, model)
+        # Indica el tipo de agente para identificarse en el front-end
         self.type = "TrafficLight"
-        self.pos = pos
-        self.condition = False
+        self.pos = pos  # Indica la posición del semáforo
+        self.condition = False  # Indica si el semáforo está en verde o en rojo
+        # Indica el tiempo que el semáforo estará en verde o en rojo
         self.timerRandom = random.randint(0, 4)
 
-    def step(self):
+    def step(self):  # Método que se ejecuta en cada paso de simulación
+        # Cada 10 pasos de simulación cambia el estado del semáforo
         if (self.model.time*self.timerRandom) % 10 == 0:
-            self.condition = not self.condition
+            self.condition = not self.condition  # Cambia el estado del semáforo
 
 
 class Roundabout(Model):
     def __init__(self):
         super().__init__()
+        # Posiciones iniciales de los coches
         self.start_positions = [(0, 7), (7, 16), (16, 9), (9, 0)]
+        # Posiciones finales de los coches
         self.end_positions = [(0, 9), (16, 7), (7, 0), (9, 16)]
-        self.schedule = RandomActivation(self)
-        self.grid = MultiGrid(17, 17, torus=True)
+        self.schedule = RandomActivation(self)  # Inicializa el modelo
+        self.grid = MultiGrid(17, 17, torus=False)  # Inicializa el grid
         self.matrix = [
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -164,26 +169,23 @@ class Roundabout(Model):
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
-        ]
+        ]  # Matriz del modelo
 
-        self.time = 0
+        self.time = 0  # Indica el tiempo de simulación
 
-        for i in range(12):
+        for i in range(12):  # Crea 12 coches
             randomInt = random.randint(0, 3)
             car = Car(self.next_id(), self,
                       self.start_positions[i % 4], self.matrix, self.end_positions[randomInt], self.end_positions)
             self.grid.place_agent(car, car.pos)
             self.schedule.add(car)
 
-        for _, (x, y) in self.grid.coord_iter():
-            if self.matrix[y][x] == 0:
-                block = Block(self.next_id(), self, (x, y))
-                self.grid.place_agent(block, block.pos)
-            elif self.matrix[y][x] == 2:
+        for _, (x, y) in self.grid.coord_iter():  # Crea los semáforos
+            if self.matrix[y][x] == 2:
                 traffic = TrafficLight(self.next_id(), self, (x, y))
                 self.grid.place_agent(traffic, traffic.pos)
                 self.schedule.add(traffic)
 
-    def step(self):
-        self.schedule.step()
-        self.time += 1
+    def step(self):  # Método que se ejecuta en cada paso de simulación
+        self.schedule.step()  # Ejecuta el método step de cada agente
+        self.time += 1  # Incrementa el tiempo de simulación

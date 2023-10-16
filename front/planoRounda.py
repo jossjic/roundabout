@@ -1,5 +1,4 @@
 # Importamos las bibliotecas necesarias para modelado 3D
-from Assets import Estatua
 from Assets import Semaforo
 from Assets import Banca
 from Assets import Arbol
